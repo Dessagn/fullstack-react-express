@@ -21,23 +21,21 @@ passport.use(new GoogleStrategy({
     callbackURL: '/auth/google/callback',
     proxy: true
     },
-    (accessToken, refreshToken, profile, done) => {
-        User.findOne({ googleId: profile.id})
-        .then((userFound) => {
+    async (accessToken, refreshToken, profile, done) => {
+        const userFound = await User.findOne({ googleId: profile.id});
             if(userFound) {
                 // already have user with specified ID in document
-                console.log(userFound);
                 done(null, userFound);
                 //console.log(userFound.email);
             }else{
                 // user is new. We create a new record
-                new User({
+                const user = await new User({
                     googleId: profile.id,
                     email: profile.emails[0].value,
                     firstName: profile.name.givenName,
                     lastName: profile.name.familyName
-                }).save().then((user) => done(null, user));
+                }).save();
+                done(null, user);
             }
-        });
     })
 );
